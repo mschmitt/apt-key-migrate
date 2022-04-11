@@ -18,6 +18,10 @@ then
 	exit 0
 fi
 
+# Backup the old keyring
+printf -v keys_from_bak "%s.%(%Y%m%d%H%M%S)T.save" "${keys_from}" -1
+cp -v "${keys_from}" "${keys_from_bak}"
+
 # Get a list of key ids in trusted.gpg
 declare -a keyids
 while IFS=':' read -r -a fields
