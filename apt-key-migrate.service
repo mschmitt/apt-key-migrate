@@ -1,0 +1,10 @@
+[Unit]
+Description=Automatic APT key migration
+ConditionPathExists=/etc/apt/trusted.gpg
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/apt-key-migrate
+
+[Install]
+WantedBy=multi-user.target

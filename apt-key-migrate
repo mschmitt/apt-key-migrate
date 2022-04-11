@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+
+keys_from='/etc/apt/trusted.gpg'
+keys_to='/etc/apt/trusted.gpg.d'
+
+function errorexit() {
+	trap - ERR
+	printf "Error on line %s\n" "$(caller)"
+	exit 1
+}
+trap errorexit ERR
+
+if [[ ! -s "${keys_from}" ]]
+then
+	printf "Nothing to do, %s not found. Good job!\n" "${keys_from}"
+	exit 0
+fi
+
+# Get a list of key ids in trusted.gpg
+declare -a keyids
+while IFS=':' read -r -a fields
+do
+	if [[ "${fields[0]}" == "pub" ]]
+	then
+		keyids+=("${fields[4]}")
+	fi
+done < <(gpg --no-default-keyring --keyring "${keys_from}" --list-keys --with-colons)
+
+# Match names to the key ids
+declare -A names
+for keyid in "${keyids[@]}"
+do
+	while IFS=':' read -r -a fields
+	do
+		if [[ "${fields[0]}" == "uid" ]]
+		then
+			names["${keyid}"]="${fields[9]//[^.a-zA-Z0-9@-]/_}"
+        	fi
+	done < <(gpg --no-default-keyring --keyring "${keys_from}" --list-keys --with-colons "${keyid}")
+done
+
+# Generate distinct keyrings and delete from trusted.gpg
+for keyid in "${keyids[@]}"
+do
+	unset keyring
+	unset key
+	printf -v keyring "%s/%s-%s.gpg" "${keys_to}" "${keyid}" "${names["${keyid}"]}"
+	printf "%s -> %s\n" "${keyid}" "${keyring}"
+	touch "${keyring}"
+	key="$(gpg --no-default-keyring --keyring "${keys_from}" --export --armor "${keyid}")"
+	if gpg --no-default-keyring --trust-model always --keyring "${keyring}" --import <<< "${key}"
+	then
+		apt-key --keyring "${keys_from}" del "${keyid}"
+		rm -f -v "${keyring}~"
+	fi
+done
+
+# Still here and not errorexited? Remove trusted.gpg
+rm -f -v /etc/apt/trusted.gpg
+rm -f -v /etc/apt/trusted.gpg~
