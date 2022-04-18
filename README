@@ -1,0 +1,4 @@
+git clone https://gist.github.com/4c41478d99050eadacf2435388774a75.git apt-key-migrate
+cd apt-key-migrate
+sudo make install
+systemctl start apt-key-migrate.service
