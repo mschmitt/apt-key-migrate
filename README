@@ -1,4 +1,12 @@
-git clone https://gist.github.com/4c41478d99050eadacf2435388774a75.git apt-key-migrate
+apt-key is deprecated and not supported at all in Ubuntu 22.04.
+
+This script will convert the contents of /etc/apt/trusted.gpg to individual keys 
+in /etc/apt/trusted.gpg.d.
+
+A systemd unit that converts on bootup is included, but does not neccessarily 
+have to be used.
+
+git clone https://github.com/mschmitt/apt-key-migrate.git
 cd apt-key-migrate
 sudo make install
 systemctl start apt-key-migrate.service
