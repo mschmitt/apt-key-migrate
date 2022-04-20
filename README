@@ -9,4 +9,4 @@ have to be used.
 git clone https://github.com/mschmitt/apt-key-migrate.git
 cd apt-key-migrate
 sudo make install
-systemctl start apt-key-migrate.service
+sudo systemctl start apt-key-migrate.service
